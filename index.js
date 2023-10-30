@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,6 +30,15 @@ async function run() {
     const servicesCollection = client.db('carDoctor').collection('services');
     const bookingCollection =  client.db('carDoctor').collection('bookings');
 
+    // Jwt Token Related APIS 
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      console.log(user);
+      res.send(user);
+    })
+
+
+    // Service Related APIS 
     app.get('/services', async(req, res)=>{
         const cursor = servicesCollection.find();
         const result = await cursor.toArray();
@@ -39,7 +49,7 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const options ={
-        projection:{title:1, price:1, service_id:1}, 
+        projection:{title:1, price:1, service_id:1, img:1 }, 
       }
       const result = await servicesCollection.findOne(query, options);
       res.send(result);
@@ -50,6 +60,17 @@ async function run() {
       const booking = req.body;
       console.log(booking);
       const result = await bookingCollection.insertOne(booking);
+      res.send(result);
+    })
+
+    // Fetch Booking data for a User 
+    app.get('/bookings', async(req, res)=>{
+      console.log(req.query.email);
+      let query = {};
+      if(req.query?.email){
+        query = {email: req.query.email}
+      }
+      const result = await bookingCollection.find(query).toArray();
       res.send(result);
     })
 
